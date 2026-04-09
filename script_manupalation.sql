@@ -17,7 +17,7 @@ ORDER BY i.rating DESC, i.interaction_date DESC;
 SELECT DISTINCT i.user_id
 FROM interactions i
 JOIN recipes r ON i.recipe_id = r.recipe_id
-WHERE r.minutes > 60;
+WHERE r.minutes > 60 AND r.minutes > 0;
 
 /*4*/
 
@@ -48,7 +48,7 @@ SELECT
 FROM recipes r
 JOIN interactions i
     ON r.recipe_id = i.recipe_id
-WHERE r.minutes <= 30
+WHERE r.minutes > 0 AND r.minutes <= 30
   AND i.rating > 0
 GROUP BY r.recipe_id, r.name, r.minutes
 HAVING COUNT(i.interaction_id) >= 20
@@ -71,6 +71,15 @@ GROUP BY r.recipe_id, r.name, r.minutes
 HAVING COUNT(i.interaction_id) >= 50
 ORDER BY avg_rating DESC, num_reviews DESC
 LIMIT 15;
+/*could be the same as 6, but with more reviews and no time limit*/
+/*this could be better*/
+SELECT r.recipe_id, r.name
+FROM recipes r
+WHERE NOT EXISTS (
+    SELECT *
+    FROM interactions i
+    WHERE i.recipe_id = r.recipe_id
+);
 
 /*8*/
 SELECT 
