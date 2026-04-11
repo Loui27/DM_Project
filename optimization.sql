@@ -82,34 +82,24 @@ LIMIT 15;
 
 
 /*10*/
-SELECT
-    r.recipe_id,
-    r.name,
-    s.num_steps,
-    x.num_reviews,
-    ROUND(x.avg_rating, 2) AS avg_rating
+SELECT r.recipe_id, r.name, step_aggregation.num_steps, review_aggregation.num_reviews, ROUND(review_aggregation.avg_rating, 2) AS avg_rating
 FROM recipes r
 JOIN (
-    SELECT
-        recipe_id,
-        COUNT(*) AS num_steps
+    SELECT recipe_id, COUNT(*) AS num_steps
     FROM recipe_steps
     GROUP BY recipe_id
-) AS s
-    ON r.recipe_id = s.recipe_id
+) AS step_aggregation
+    ON r.recipe_id = step_aggregation.recipe_id
 JOIN (
-    SELECT
-        recipe_id,
-        COUNT(interaction_id) AS num_reviews,
-        AVG(rating) AS avg_rating
+    SELECT recipe_id, COUNT(interaction_id) AS num_reviews, AVG(rating) AS avg_rating
     FROM interactions
     WHERE rating > 0
     GROUP BY recipe_id
     HAVING COUNT(interaction_id) >= 20
        AND AVG(rating) >= 4.0
-) AS x
-    ON r.recipe_id = x.recipe_id
-WHERE s.num_steps > (
+) AS review_aggregation
+    ON r.recipe_id = review_aggregation.recipe_id
+WHERE step_aggregation.num_steps > (
     SELECT AVG(step_count)
     FROM (
         SELECT COUNT(*) AS step_count
@@ -117,5 +107,5 @@ WHERE s.num_steps > (
         GROUP BY recipe_id
     ) AS step_stats
 )
-ORDER BY s.num_steps DESC, x.avg_rating DESC
+ORDER BY step_aggregation.num_steps DESC, review_aggregation.avg_rating DESC
 LIMIT 15;
